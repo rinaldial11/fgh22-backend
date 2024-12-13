@@ -1,11 +1,11 @@
 package controllers
 
 import (
+	"example/postman/lib"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pilinux/argon2"
 )
 
 var serial int = len(Users)
@@ -40,7 +40,8 @@ func Register(ctx *gin.Context) {
 			})
 			return
 		} else {
-			hasher, _ := argon2.CreateHash(form.Password, form.Password, argon2.DefaultParams)
+			// hasher, _ := argon2.CreateHash(form.Password, form.Password, argon2.DefaultParams)
+			hasher := lib.CreateHash(form.Password, form.Password)
 			serial++
 			form.Id = serial
 			form.Password = hasher
@@ -62,7 +63,8 @@ func Login(ctx *gin.Context) {
 
 	temp := false
 	for _, user := range Users {
-		isValid, _ := argon2.ComparePasswordAndHash(form.Password, form.Password, user.Password)
+		// isValid, _ := argon2.ComparePasswordAndHash(form.Password, form.Password, user.Password)
+		isValid := lib.HashValidator(form.Password, form.Password, user.Password)
 		if user.Email == form.Email && isValid {
 			ctx.Header("X-Logged-user", "true")
 			ctx.JSON(http.StatusOK, Response{
