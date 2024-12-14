@@ -63,14 +63,17 @@ func Login(ctx *gin.Context) {
 
 	temp := false
 	for _, user := range Users {
-		// isValid, _ := argon2.ComparePasswordAndHash(form.Password, form.Password, user.Password)
 		isValid := lib.HashValidator(form.Password, form.Password, user.Password)
 		if user.Email == form.Email && isValid {
-			ctx.Header("X-Logged-user", "true")
+			token := lib.GenerateToken(struct {
+				UserID int `json:"userId"`
+			}{
+				UserID: user.Id,
+			})
 			ctx.JSON(http.StatusOK, Response{
 				Succsess: true,
 				Message:  "login success",
-				Results:  user,
+				Results:  token,
 			})
 			temp = true
 			return

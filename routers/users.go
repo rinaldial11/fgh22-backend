@@ -8,7 +8,7 @@ import (
 )
 
 func UserRouter(router *gin.RouterGroup) {
-	router.Use(middlewares.SetAuthorize())
+	router.Use(middlewares.ValidateToken())
 	router.GET("", controllers.GetAllUsers)
 	router.GET("/:id", controllers.GetUserById)
 	router.PATCH("/:id", controllers.EditUser)

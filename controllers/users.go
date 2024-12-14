@@ -9,52 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type User struct {
-	Id       int    `json:"id"`
-	Fullname string `json:"fullname" form:"fullname"`
-	Email    string `json:"email" form:"email"`
-	Password string `json:"password" form:"password"`
-}
-
-type ListUsers []User
-
-var Users = ListUsers{
-	{
-		Id:       1,
-		Fullname: "Budiono Siregar",
-		Email:    "budi@mail.com",
-		Password: "$argon2i$v=19$m=65536,t=1,p=2$xYjCiAsMbo/xmH8I/4SkeQ$MvbfLtQCqyryc+p9ghXxwEniSGDZLMF2ckH7+Hzxqq0",
-	},
-	{
-		Id:       2,
-		Fullname: "Endra Prasmanan",
-		Email:    "endra@mail.com",
-		Password: "$argon2i$v=19$m=65536,t=1,p=2$NRaP9cPxjmhEqCvwF5+4ig$hY+X9oq8wlA3aWKEiwx0z/THUkypKplR4C0j+jv2qtA",
-	},
-	{
-		Id:       3,
-		Fullname: "Rama Ajarindong",
-		Email:    "rama@mail.com",
-		Password: "$argon2i$v=19$m=65536,t=1,p=2$ksC1dsVheRE4cfO9fR8odw$+hStsdH+e9w68Zxn30RMKWLjEcIFXVhhQ6EIGfbKeoU",
-	},
-	{
-		Id:       4,
-		Fullname: "Adiv Bened",
-		Email:    "adiv@mail.com",
-		Password: "$argon2i$v=19$m=65536,t=1,p=2$vRI56QMSk9gBXGnbLJ3XiQ$O7hU2yZt7zSTokAueXwcQAEX7lZs6ufAEyddfjc12vk",
-	},
-	{
-		Id:       5,
-		Fullname: "Nanda Brew",
-		Email:    "nanda@mail.com",
-		Password: "$argon2i$v=19$m=65536,t=1,p=2$gCjUU9eQbquuRJcNEoQm9g$bMrkwmI9O4bA23xLEqVEYX26uc1s0k/pKyrPkaC6J1c",
-	},
-}
-
 func GetAllUsers(ctx *gin.Context) {
 	search := ctx.Query("search")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "3"))
+	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
 	users := Users
 
 	sort.Slice(users, func(i, j int) bool {
@@ -78,15 +36,11 @@ func GetAllUsers(ctx *gin.Context) {
 
 	} else {
 		var resUsers User
-
+		var listDetails []User
 		for _, userSearch := range users {
 			if strings.Contains(strings.ToLower(userSearch.Fullname), search) || strings.Contains(userSearch.Fullname, search) {
 				resUsers = userSearch
-				ctx.JSON(http.StatusOK, Response{
-					Succsess: true,
-					Message:  "detail user",
-					Results:  resUsers,
-				})
+				listDetails = append(listDetails, resUsers)
 			}
 		}
 		if resUsers == (User{}) {
@@ -94,7 +48,13 @@ func GetAllUsers(ctx *gin.Context) {
 				Succsess: false,
 				Message:  "User not found",
 			})
+			return
 		}
+		ctx.JSON(http.StatusOK, Response{
+			Succsess: true,
+			Message:  "detail user",
+			Results:  listDetails,
+		})
 	}
 }
 

@@ -9,60 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Response struct {
-	Succsess bool   `json:"success"`
-	Message  string `json:"message"`
-	Results  any    `json:"results,omitempty"`
-}
-
-type Movie struct {
-	Id          int    `json:"id"`
-	Title       string `json:"title" form:"title"`
-	Image       string `json:"image" form:"image"`
-	Description string `json:"description" form:"description"`
-}
-
-type ListMovies []Movie
-
-var Data = ListMovies{
-	{
-		Id:          1,
-		Title:       "Lovely Runner",
-		Image:       "example/lovelyrunner.com",
-		Description: "Lorem ipsum dolor sit amet",
-	},
-	{
-		Id:          2,
-		Title:       "Love Next Door",
-		Image:       "example/lovenextdoor.com",
-		Description: "Lorem ipsum dolor sit amet",
-	},
-	{
-		Id:          3,
-		Title:       "Uncontrollably Fond",
-		Image:       "example/uncontrollablyfond.com",
-		Description: "Lorem ipsum dolor sit amet",
-	},
-	{
-		Id:          4,
-		Title:       "Hometown Cha-cha-cha",
-		Image:       "example/hometown.com",
-		Description: "Lorem ipsum dolor sit amet",
-	},
-	{
-		Id:          5,
-		Title:       "Start Up",
-		Image:       "example/startup.com",
-		Description: "Lorem ipsum dolor sit amet",
-	},
-}
-
 var sequence int = len(Data)
 
 func GetAllMovies(ctx *gin.Context) {
 	search := ctx.Query("search")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "2"))
+	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
 	data := Data
 
 	sort.Slice(data, func(i, j int) bool {
