@@ -60,15 +60,11 @@ func GetAllUsers(ctx *gin.Context) {
 
 func GetUserById(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
-	users := Users
 
 	var resUser User
 
-	for _, searchUser := range users {
-		if searchUser.Id == id {
-			resUser = searchUser
-		}
-	}
+	searchUser := FindUserById(id)
+	resUser = searchUser
 	if resUser == (User{}) {
 		ctx.JSON(http.StatusNotFound, Response{
 			Succsess: false,

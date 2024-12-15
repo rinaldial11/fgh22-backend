@@ -78,3 +78,21 @@ var Users = ListUsers{
 	{Id: 25, Fullname: "Tina Adams", Email: "tina.adams@example.com", Password: "$argon2i$v=19$m=65536,t=1,p=2$OIIAw9F7QeTBo4nWAfKgLQ$UEZ3jiaGXUw1oZ6TFm/PXN8a6G9RsYKGbbUxYdXZc54"},
 	{Id: 26, Fullname: "Ursula Price", Email: "ursula.price@example.com", Password: "$argon2i$v=19$m=65536,t=1,p=2$OIIAw9F7QeTBo4nWAfKgLQ$UEZ3jiaGXUw1oZ6TFm/PXN8a6G9RsYKGbbUxYdXZc54"},
 }
+
+func FindUserByEmail(email string) User {
+	for _, user := range Users {
+		if user.Email == email {
+			return user
+		}
+	}
+	return User{}
+}
+
+func FindUserById(id int) User {
+	for _, user := range Users {
+		if user.Id == id {
+			return user
+		}
+	}
+	return User{}
+}
