@@ -13,7 +13,7 @@ var serial int = len(Users)
 func Register(ctx *gin.Context) {
 	var form User
 	ctx.ShouldBind(&form)
-	found := FindUserByEmail(form.Email)
+	found := FindUserByEmail(strings.ToLower(form.Email))
 	if found != (User{}) {
 		ctx.JSON(http.StatusBadRequest, Response{
 			Succsess: false,
@@ -39,6 +39,7 @@ func Register(ctx *gin.Context) {
 		hasher := lib.CreateHash(form.Password, form.Password)
 		serial++
 		form.Id = serial
+		form.Email = strings.ToLower(form.Email)
 		form.Password = hasher
 		Users = append(Users, form)
 

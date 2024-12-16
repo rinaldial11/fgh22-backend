@@ -51,6 +51,14 @@ func GetAllMovies(ctx *gin.Context) {
 			})
 			return
 		}
+		if len(listDetails) == 1 {
+			ctx.JSON(http.StatusOK, Response{
+				Succsess: true,
+				Message:  "Details movie",
+				Results:  listDetails[0],
+			})
+			return
+		}
 		ctx.JSON(http.StatusOK, Response{
 			Succsess: true,
 			Message:  "Details movie",

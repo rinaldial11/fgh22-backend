@@ -51,6 +51,14 @@ func GetAllUsers(ctx *gin.Context) {
 			})
 			return
 		}
+		if len(listDetails) == 1 {
+			ctx.JSON(http.StatusOK, Response{
+				Succsess: true,
+				Message:  "detail user",
+				Results:  listDetails[0],
+			})
+			return
+		}
 		ctx.JSON(http.StatusOK, Response{
 			Succsess: true,
 			Message:  "detail user",
