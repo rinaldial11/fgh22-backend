@@ -15,11 +15,35 @@ func GetAllMovies(ctx *gin.Context) {
 	search := ctx.Query("search")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
+	order := ctx.DefaultQuery("order", "asc")
+	orderBy := ctx.DefaultQuery("sort", "id")
 	data := Data
 
-	sort.Slice(data, func(i, j int) bool {
-		return data[i].Title < data[j].Title
-	})
+	if order == "asc" {
+		if orderBy == "id" {
+			sort.Slice(data, func(i, j int) bool {
+				return data[i].Id < data[j].Id
+			})
+		}
+		if orderBy == "title" {
+			sort.Slice(data, func(i, j int) bool {
+				return data[i].Title < data[j].Title
+			})
+		}
+	}
+
+	if order == "desc" {
+		if orderBy == "id" {
+			sort.Slice(data, func(i, j int) bool {
+				return data[i].Id > data[j].Id
+			})
+		}
+		if orderBy == "title" {
+			sort.Slice(data, func(i, j int) bool {
+				return data[i].Title > data[j].Title
+			})
+		}
+	}
 
 	if search == "" {
 		if page*limit > len(data) {

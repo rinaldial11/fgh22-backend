@@ -14,11 +14,35 @@ func GetAllUsers(ctx *gin.Context) {
 	search := ctx.Query("search")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
+	order := ctx.DefaultQuery("order", "asc")
+	orderBy := ctx.DefaultQuery("sort", "id")
 	users := Users
 
-	sort.Slice(users, func(i, j int) bool {
-		return users[i].Fullname < users[j].Fullname
-	})
+	if order == "asc" {
+		if orderBy == "id" {
+			sort.Slice(users, func(i, j int) bool {
+				return users[i].Id < users[j].Id
+			})
+		}
+		if orderBy == "fullname" {
+			sort.Slice(users, func(i, j int) bool {
+				return users[i].Fullname < users[j].Fullname
+			})
+		}
+	}
+
+	if order == "desc" {
+		if orderBy == "id" {
+			sort.Slice(users, func(i, j int) bool {
+				return users[i].Id > users[j].Id
+			})
+		}
+		if orderBy == "fullname" {
+			sort.Slice(users, func(i, j int) bool {
+				return users[i].Fullname > users[j].Fullname
+			})
+		}
+	}
 
 	if search == "" {
 		if page*limit > len(users) {
