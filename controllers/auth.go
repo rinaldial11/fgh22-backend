@@ -46,7 +46,6 @@ func Register(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, Response{
 		Succsess: true,
 		Message:  "register success",
-		Results:  form,
 	})
 }
 

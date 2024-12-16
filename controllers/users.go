@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"example/postman/lib"
 	"net/http"
 	"sort"
 	"strconv"
@@ -107,7 +108,7 @@ func EditUser(ctx *gin.Context) {
 					})
 					return
 				} else {
-					Users[i].Password = form.Password
+					Users[i].Password = lib.CreateHash(form.Password, form.Password)
 				}
 			}
 			ctx.JSON(http.StatusOK, Response{
