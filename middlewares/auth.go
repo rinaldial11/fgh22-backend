@@ -15,6 +15,14 @@ import (
 func ValidateToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		head := ctx.GetHeader("Authorization")
+		if head == "" {
+			ctx.JSON(http.StatusUnauthorized, controllers.Response{
+				Succsess: false,
+				Message:  "Unauthorized",
+			})
+			ctx.Abort()
+			return
+		}
 		token := strings.Split(head, " ")[1:][0]
 		fmt.Println(token)
 		tok, _ := jwt.ParseSigned(token, []jose.SignatureAlgorithm{jose.HS256})
