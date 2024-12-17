@@ -2,48 +2,43 @@ package controllers
 
 import (
 	"example/postman/lib"
+	"example/postman/models"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-var serial int = len(Users)
-
 func Register(ctx *gin.Context) {
-	var form User
-	ctx.ShouldBind(&form)
-	found := FindUserByEmail(strings.ToLower(form.Email))
-	if found != (User{}) {
+	var formUser models.User
+	ctx.ShouldBind(&formUser)
+	found := models.FindUserByEmail(strings.ToLower(formUser.Email))
+	if found != (models.User{}) {
 		ctx.JSON(http.StatusBadRequest, Response{
 			Succsess: false,
 			Message:  "email not available",
 		})
 		return
 	}
-
-	if len(form.Email) < 8 || !strings.Contains(form.Email, "@") {
+	if len(formUser.Email) < 8 || !strings.Contains(formUser.Email, "@") {
 		ctx.JSON(http.StatusBadRequest, Response{
 			Succsess: false,
 			Message:  "email must be 8 character and contains @",
 		})
 		return
 	}
-	if len(form.Password) < 6 {
+	if len(formUser.Password) < 6 {
 		ctx.JSON(http.StatusBadRequest, Response{
 			Succsess: false,
 			Message:  "password length at least 6 chatacter",
 		})
 		return
-	} else {
-		hasher := lib.CreateHash(form.Password, form.Password)
-		serial++
-		form.Id = serial
-		form.Email = strings.ToLower(form.Email)
-		form.Password = hasher
-		Users = append(Users, form)
-
 	}
+	hasher := lib.CreateHash(formUser.Password)
+	formUser.Email = strings.ToLower(formUser.Email)
+	formUser.Password = hasher
+	models.AddUser(formUser)
+
 	ctx.JSON(http.StatusOK, Response{
 		Succsess: true,
 		Message:  "register success",
@@ -54,7 +49,8 @@ func Login(ctx *gin.Context) {
 	var form User
 	ctx.ShouldBind(&form)
 
-	user := FindUserByEmail(form.Email)
+	// user := FindUserByEmail(form.Email)
+	user := models.FindUserByEmail(form.Email)
 	isValid := lib.HashValidator(form.Password, form.Password, user.Password)
 	if isValid {
 		token := lib.GenerateToken(struct {

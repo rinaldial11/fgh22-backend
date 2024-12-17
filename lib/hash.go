@@ -2,8 +2,8 @@ package lib
 
 import "github.com/pilinux/argon2"
 
-func CreateHash(password string, secret string) string {
-	hasher, _ := argon2.CreateHash(password, secret, argon2.DefaultParams)
+func CreateHash(password string) string {
+	hasher, _ := argon2.CreateHash(password, string(JWT_SECRET), argon2.DefaultParams)
 	return hasher
 }
 

@@ -3,7 +3,6 @@ package middlewares
 import (
 	"example/postman/controllers"
 	"example/postman/lib"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -24,7 +23,6 @@ func ValidateToken() gin.HandlerFunc {
 			return
 		}
 		token := strings.Split(head, " ")[1:][0]
-		fmt.Println(token)
 		tok, _ := jwt.ParseSigned(token, []jose.SignatureAlgorithm{jose.HS256})
 		out := jwt.Claims{}
 
