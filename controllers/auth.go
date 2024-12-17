@@ -14,21 +14,21 @@ func Register(ctx *gin.Context) {
 	ctx.ShouldBind(&formUser)
 	found := models.FindUserByEmail(strings.ToLower(formUser.Email))
 	if found != (models.User{}) {
-		ctx.JSON(http.StatusBadRequest, Response{
+		ctx.JSON(http.StatusBadRequest, models.Response{
 			Succsess: false,
 			Message:  "email not available",
 		})
 		return
 	}
 	if len(formUser.Email) < 8 || !strings.Contains(formUser.Email, "@") {
-		ctx.JSON(http.StatusBadRequest, Response{
+		ctx.JSON(http.StatusBadRequest, models.Response{
 			Succsess: false,
 			Message:  "email must be 8 character and contains @",
 		})
 		return
 	}
 	if len(formUser.Password) < 6 {
-		ctx.JSON(http.StatusBadRequest, Response{
+		ctx.JSON(http.StatusBadRequest, models.Response{
 			Succsess: false,
 			Message:  "password length at least 6 chatacter",
 		})
@@ -39,14 +39,14 @@ func Register(ctx *gin.Context) {
 	formUser.Password = hasher
 	models.AddUser(formUser)
 
-	ctx.JSON(http.StatusOK, Response{
+	ctx.JSON(http.StatusOK, models.Response{
 		Succsess: true,
 		Message:  "register success",
 	})
 }
 
 func Login(ctx *gin.Context) {
-	var form User
+	var form models.User
 	ctx.ShouldBind(&form)
 
 	// user := FindUserByEmail(form.Email)
@@ -58,14 +58,14 @@ func Login(ctx *gin.Context) {
 		}{
 			UserID: user.Id,
 		})
-		ctx.JSON(http.StatusOK, Response{
+		ctx.JSON(http.StatusOK, models.Response{
 			Succsess: true,
 			Message:  "login success",
 			Results:  token,
 		})
 		return
 	}
-	ctx.JSON(http.StatusUnauthorized, Response{
+	ctx.JSON(http.StatusUnauthorized, models.Response{
 		Succsess: false,
 		Message:  "wrong email or password",
 	})

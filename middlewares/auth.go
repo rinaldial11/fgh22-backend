@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	"example/postman/controllers"
 	"example/postman/lib"
+	"example/postman/models"
 	"net/http"
 	"strings"
 
@@ -15,7 +15,7 @@ func ValidateToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		head := ctx.GetHeader("Authorization")
 		if head == "" {
-			ctx.JSON(http.StatusUnauthorized, controllers.Response{
+			ctx.JSON(http.StatusUnauthorized, models.Response{
 				Succsess: false,
 				Message:  "Unauthorized",
 			})
@@ -29,7 +29,7 @@ func ValidateToken() gin.HandlerFunc {
 		err := tok.Claims(lib.JWT_SECRET, &out)
 
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, controllers.Response{
+			ctx.JSON(http.StatusUnauthorized, models.Response{
 				Succsess: false,
 				Message:  "Unauthorized",
 			})

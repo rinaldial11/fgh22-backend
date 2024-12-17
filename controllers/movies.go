@@ -1,180 +1,107 @@
 package controllers
 
 import (
+	"example/postman/models"
 	"net/http"
-	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
-
-var sequence int = len(Data)
 
 func GetAllMovies(ctx *gin.Context) {
 	search := ctx.Query("search")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
-	order := ctx.DefaultQuery("order", "asc")
-	orderBy := ctx.DefaultQuery("sort", "id")
-	data := Data
+	allMovies := models.GetAllMovies(page, limit)
 
-	if order == "asc" {
-		if orderBy == "id" {
-			sort.Slice(data, func(i, j int) bool {
-				return data[i].Id < data[j].Id
-			})
-		}
-		if orderBy == "title" {
-			sort.Slice(data, func(i, j int) bool {
-				return data[i].Title < data[j].Title
-			})
-		}
-	}
-
-	if order == "desc" {
-		if orderBy == "id" {
-			sort.Slice(data, func(i, j int) bool {
-				return data[i].Id > data[j].Id
-			})
-		}
-		if orderBy == "title" {
-			sort.Slice(data, func(i, j int) bool {
-				return data[i].Title > data[j].Title
-			})
-		}
-	}
-
-	if search == "" {
-		if page*limit > len(data) {
-			ctx.JSON(http.StatusOK, Response{
+	foundMovie := models.SearchMovieByTitle(search)
+	if search != "" {
+		if len(foundMovie) == 1 {
+			ctx.JSON(http.StatusOK, models.Response{
 				Succsess: true,
-				Message:  "List all movies",
-				Results:  data[(page-1)*limit : len(Data)],
+				Message:  "list all movies",
+				Results:  foundMovie[0],
 			})
 			return
 		}
-		ctx.JSON(http.StatusOK, Response{
+		ctx.JSON(http.StatusOK, models.Response{
 			Succsess: true,
-			Message:  "List all movies",
-			Results:  data[(page-1)*limit : page*limit],
+			Message:  "list all movies",
+			Results:  foundMovie,
 		})
-	} else {
-		var resMov Movie
-		var listDetails []Movie
-		for _, dataSearch := range data {
-			if strings.Contains(strings.ToLower(dataSearch.Title), search) || strings.Contains(dataSearch.Title, search) {
-				resMov = dataSearch
-				listDetails = append(listDetails, resMov)
-			}
-		}
-		if resMov == (Movie{}) {
-			ctx.JSON(http.StatusNotFound, Response{
-				Succsess: false,
-				Message:  "Movie not found",
-			})
-			return
-		}
-		if len(listDetails) == 1 {
-			ctx.JSON(http.StatusOK, Response{
-				Succsess: true,
-				Message:  "Details movie",
-				Results:  listDetails[0],
-			})
-			return
-		}
-		ctx.JSON(http.StatusOK, Response{
-			Succsess: true,
-			Message:  "Details movie",
-			Results:  listDetails,
-		})
+		return
 	}
+	ctx.JSON(http.StatusOK, models.Response{
+		Succsess: true,
+		Message:  "list all movies",
+		Results:  allMovies,
+	})
 }
 
 func GetMovieById(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
-	data := Data
+	foundMovie := models.SelectOneMovie(id)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, Response{
+		ctx.JSON(http.StatusBadRequest, models.Response{
 			Succsess: false,
 			Message:  "Wrong movie id format",
 		})
 		return
 	}
 
-	var resMov Movie
-
-	for _, data := range data {
-		if data.Id == id {
-			resMov = data
-		}
-	}
-	if resMov == (Movie{}) {
-		ctx.JSON(http.StatusNotFound, Response{
+	if foundMovie == (models.Movie{}) {
+		ctx.JSON(http.StatusNotFound, models.Response{
 			Succsess: false,
-			Message:  "Movie not found",
+			Message:  "movie not found",
 		})
 		return
 	}
-	ctx.JSON(http.StatusOK, Response{
+
+	ctx.JSON(http.StatusOK, models.Response{
 		Succsess: true,
 		Message:  "Details movie",
-		Results:  resMov,
+		Results:  foundMovie,
 	})
 }
 
 func AddMovie(ctx *gin.Context) {
-	var form Movie
-
-	ctx.ShouldBind(&form)
-	sequence++
-	form.Id = sequence
-	Data = append(Data, form)
-
-	ctx.JSON(http.StatusOK, Response{
+	var formMovie models.Movie
+	ctx.ShouldBind(&formMovie)
+	newlyAdded := models.AddMovie(formMovie)
+	ctx.JSON(http.StatusOK, models.Response{
 		Succsess: true,
-		Message:  "Movie added",
-		Results:  form,
+		Message:  "movie added",
+		Results:  newlyAdded,
 	})
+
 }
 
 func EditMovie(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
-	var form Movie
-	ctx.ShouldBind(&form)
-	for i, data := range Data {
-		if data.Id == id {
-			if form.Title != "" {
-				Data[i].Title = form.Title
-			}
-			if form.Image != "" {
-				Data[i].Image = form.Image
-			}
-			if form.Description != "" {
-				Data[i].Description = form.Description
-			}
-			ctx.JSON(http.StatusOK, Response{
-				Succsess: true,
-				Message:  "movie detail has modify",
-				Results:  Data[i],
-			})
-			return
-		}
+	foundMovie := models.SelectOneMovie(id)
+	if foundMovie == (models.Movie{}) {
+		ctx.JSON(http.StatusNotFound, models.Response{
+			Succsess: false,
+			Message:  "movie not found",
+		})
+		return
 	}
+	ctx.ShouldBind(&foundMovie)
+	updatedMovie := models.UpdateMovie(foundMovie)
+	ctx.JSON(http.StatusOK, models.Response{
+		Succsess: true,
+		Message:  "movie detail has modify",
+		Results:  updatedMovie,
+	})
 }
 
 func DeleteMovie(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
+	deletedMovie := models.DropMovie(id)
 
-	for i, data := range Data {
-		if data.Id == id {
-			Data = append(Data[:i], Data[i+1:]...)
-			ctx.JSON(http.StatusOK, Response{
-				Succsess: true,
-				Message:  "movie deleted",
-				Results:  data,
-			})
-			return
-		}
-	}
+	ctx.JSON(http.StatusOK, models.Response{
+		Succsess: true,
+		Message:  "movie deleted",
+		Results:  deletedMovie,
+	})
 }
