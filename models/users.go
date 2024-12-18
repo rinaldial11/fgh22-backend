@@ -8,10 +8,19 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type PageInfo struct {
+	CurrentPage int `json:"currentPage"`
+	NextPage    int `json:"nextPage"`
+	PrevPage    int `json:"prevPage"`
+	TotalPage   int `json:"totalPage"`
+	TotalData   int `json:"totalData"`
+}
+
 type Response struct {
-	Succsess bool   `json:"success"`
-	Message  string `json:"message"`
-	Results  any    `json:"results,omitempty"`
+	Succsess bool     `json:"success"`
+	Message  string   `json:"message"`
+	PageInfo PageInfo `json:"pageInfo,omitempty"`
+	Results  any      `json:"results,omitempty"`
 }
 
 type User struct {
@@ -42,14 +51,13 @@ func GetAllUsers(page int, limit int) ListUsers {
 	defer conn.Close(context.Background())
 
 	offset := (page - 1) * limit
-	resLimit := page * limit
 	rows, err := conn.Query(context.Background(), `
 		SELECT id, '' as fullname, email, password
 		FROM users
 		ORDER BY id ASC
 		OFFSET $1 
 		LIMIT $2
-	`, offset, resLimit)
+	`, offset, limit)
 	if err != nil {
 		fmt.Println(err)
 	}

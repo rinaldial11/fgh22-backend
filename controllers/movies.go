@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"example/postman/lib"
 	"example/postman/models"
 	"net/http"
 	"strconv"
@@ -9,17 +10,19 @@ import (
 )
 
 func GetAllMovies(ctx *gin.Context) {
-	search := ctx.Query("search")
+	search := ctx.DefaultQuery("search", "")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
 	allMovies := models.GetAllMovies(page, limit)
+	count := models.CountData(search)
 
-	foundMovie := models.SearchMovieByTitle(search)
+	foundMovie := models.SearchMovieByTitle(search, page, limit)
 	if search != "" {
 		if len(foundMovie) == 1 {
 			ctx.JSON(http.StatusOK, models.Response{
 				Succsess: true,
 				Message:  "list all movies",
+				PageInfo: models.PageInfo(lib.GetPageInfo(page, limit, count)),
 				Results:  foundMovie[0],
 			})
 			return
@@ -27,6 +30,7 @@ func GetAllMovies(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, models.Response{
 			Succsess: true,
 			Message:  "list all movies",
+			PageInfo: models.PageInfo(lib.GetPageInfo(page, limit, count)),
 			Results:  foundMovie,
 		})
 		return
@@ -34,6 +38,7 @@ func GetAllMovies(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, models.Response{
 		Succsess: true,
 		Message:  "list all movies",
+		PageInfo: models.PageInfo(lib.GetPageInfo(page, limit, count)),
 		Results:  allMovies,
 	})
 }
@@ -97,6 +102,14 @@ func EditMovie(ctx *gin.Context) {
 
 func DeleteMovie(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
+	found := models.SelectOneMovie(id)
+	if found == (models.Movie{}) {
+		ctx.JSON(http.StatusNotFound, models.Response{
+			Succsess: false,
+			Message:  "movie not found",
+		})
+		return
+	}
 	deletedMovie := models.DropMovie(id)
 
 	ctx.JSON(http.StatusOK, models.Response{
