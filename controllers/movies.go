@@ -3,10 +3,13 @@ package controllers
 import (
 	"example/postman/lib"
 	"example/postman/models"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func GetAllMovies(ctx *gin.Context) {
@@ -72,6 +75,24 @@ func GetMovieById(ctx *gin.Context) {
 func AddMovie(ctx *gin.Context) {
 	var formMovie models.Movie
 	ctx.ShouldBind(&formMovie)
+	file, _ := ctx.FormFile("images")
+
+	if file != nil {
+		filename := uuid.New().String()
+		splitedfilename := strings.Split(file.Filename, ".")
+		ext := splitedfilename[len(splitedfilename)-1]
+		if ext != "jpg" && ext != "png" {
+			ctx.JSON(http.StatusBadRequest, models.Response{
+				Succsess: false,
+				Message:  "wrong file format",
+			})
+			return
+		}
+		storedFile := fmt.Sprintf("%s.%s", filename, ext)
+		ctx.SaveUploadedFile(file, fmt.Sprintf("uploads/movies/%s", storedFile))
+		formMovie.Image = storedFile
+	}
+
 	newlyAdded := models.AddMovie(formMovie)
 	ctx.JSON(http.StatusOK, models.Response{
 		Succsess: true,
