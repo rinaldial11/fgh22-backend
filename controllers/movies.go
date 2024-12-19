@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"example/postman/lib"
 	"example/postman/models"
 	"fmt"
@@ -16,10 +17,40 @@ func GetAllMovies(ctx *gin.Context) {
 	search := ctx.DefaultQuery("search", "")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
-	allMovies := models.GetAllMovies(page, limit)
-	count := models.CountData(search)
+	sorting := strings.ToLower(ctx.DefaultQuery("order", "ASC"))
+	sortBy := ctx.DefaultQuery("sort_by", "id")
+
+	if sorting != "asc" {
+		sorting = "desc"
+	}
+
+	var movies models.ListMovies
+	var count int
+	modifyRequestUri := fmt.Sprintf("count+%s", ctx.Request.RequestURI)
+
+	get := lib.GetFromRedis(ctx.Request.RequestURI)
+	getCount := lib.GetFromRedis(modifyRequestUri)
+
+	if get.Val() != "" {
+		raw := []byte(get.Val())
+		json.Unmarshal(raw, &movies)
+	} else {
+		movies = models.GetAllMovies(page, limit, sortBy, sorting)
+		encoded, _ := json.Marshal(movies)
+		lib.SetToRedis(ctx.Request.RequestURI, encoded)
+	}
+
+	if getCount.Val() != "" {
+		raw := []byte(getCount.Val())
+		json.Unmarshal(raw, &count)
+	} else {
+		count = models.CountData(search)
+		encoded, _ := json.Marshal(count)
+		lib.SetToRedis(modifyRequestUri, encoded)
+	}
 
 	foundMovie := models.SearchMovieByTitle(search, page, limit)
+
 	if search != "" {
 		if len(foundMovie) == 1 {
 			ctx.JSON(http.StatusOK, models.Response{
@@ -42,7 +73,7 @@ func GetAllMovies(ctx *gin.Context) {
 		Succsess: true,
 		Message:  "list all movies",
 		PageInfo: models.PageInfo(lib.GetPageInfo(page, limit, count)),
-		Results:  allMovies,
+		Results:  movies,
 	})
 }
 
@@ -99,12 +130,14 @@ func AddMovie(ctx *gin.Context) {
 		Message:  "movie added",
 		Results:  newlyAdded,
 	})
-
 }
 
 func EditMovie(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
 	foundMovie := models.SelectOneMovie(id)
+	ctx.ShouldBind(&foundMovie)
+	file, _ := ctx.FormFile("images")
+
 	if foundMovie == (models.Movie{}) {
 		ctx.JSON(http.StatusNotFound, models.Response{
 			Succsess: false,
@@ -112,8 +145,25 @@ func EditMovie(ctx *gin.Context) {
 		})
 		return
 	}
-	ctx.ShouldBind(&foundMovie)
+	if file != nil {
+		filename := uuid.New().String()
+		splitedfilename := strings.Split(file.Filename, ".")
+		ext := splitedfilename[len(splitedfilename)-1]
+		if ext != "jpg" && ext != "png" {
+			ctx.JSON(http.StatusBadRequest, models.Response{
+				Succsess: false,
+				Message:  "wrong file format",
+			})
+			return
+		}
+		storedFile := fmt.Sprintf("%s.%s", filename, ext)
+		ctx.SaveUploadedFile(file, fmt.Sprintf("uploads/movies/%s", storedFile))
+		foundMovie.Image = storedFile
+		fmt.Println(foundMovie)
+	}
+
 	updatedMovie := models.UpdateMovie(foundMovie)
+
 	ctx.JSON(http.StatusOK, models.Response{
 		Succsess: true,
 		Message:  "movie detail has modify",

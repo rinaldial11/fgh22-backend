@@ -9,18 +9,18 @@ import (
 )
 
 type PageInfo struct {
-	CurrentPage int `json:"currentPage"`
-	NextPage    int `json:"nextPage"`
-	PrevPage    int `json:"prevPage"`
-	TotalPage   int `json:"totalPage"`
-	TotalData   int `json:"totalData"`
+	CurrentPage int `json:"currentPage,omitempty"`
+	NextPage    int `json:"nextPage,omitempty"`
+	PrevPage    int `json:"prevPage,omitempty"`
+	TotalPage   int `json:"totalPage,omitempty"`
+	TotalData   int `json:"totalData,omitempty"`
 }
 
 type Response struct {
-	Succsess bool     `json:"success"`
-	Message  string   `json:"message"`
-	PageInfo PageInfo `json:"pageInfo,omitempty"`
-	Results  any      `json:"results,omitempty"`
+	Succsess bool   `json:"success"`
+	Message  string `json:"message"`
+	PageInfo any    `json:"pageInfo,omitempty"`
+	Results  any    `json:"results,omitempty"`
 }
 
 type User struct {
@@ -46,18 +46,13 @@ func SelectOneUsers(idUser int) User {
 	return user
 }
 
-func GetAllUsers(page int, limit int) ListUsers {
+func GetAllUsers(page int, limit int, orderBy string, order string) ListUsers {
 	conn := lib.DB()
 	defer conn.Close(context.Background())
 
+	modifyQuery := fmt.Sprintf("SELECT id, '' as fullname, email, password FROM users ORDER BY %s %s OFFSET $1 LIMIT $2", orderBy, order)
 	offset := (page - 1) * limit
-	rows, err := conn.Query(context.Background(), `
-		SELECT id, '' as fullname, email, password
-		FROM users
-		ORDER BY id ASC
-		OFFSET $1 
-		LIMIT $2
-	`, offset, limit)
+	rows, err := conn.Query(context.Background(), modifyQuery, offset, limit)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -139,4 +134,18 @@ func DropUser(id int) User {
 		RETURNING id, email, password
 	`, id).Scan(&deletedUser.Id, &deletedUser.Email, &deletedUser.Password)
 	return deletedUser
+}
+
+func CountUser(search string) int {
+	conn := lib.DB()
+	defer conn.Close(context.Background())
+
+	titleSubstring := "%" + search + "%"
+	var total int
+	conn.QueryRow(context.Background(), `
+		SELECT COUNT(users.id) 
+		FROM users
+		WHERE email ILIKE $1
+	`, titleSubstring).Scan(&total)
+	return total
 }

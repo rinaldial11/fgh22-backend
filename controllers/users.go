@@ -90,7 +90,14 @@ func GetAllUsers(ctx *gin.Context) {
 	search := ctx.Query("search")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
-	allUsers := models.GetAllUsers(page, limit)
+	order := strings.ToLower(ctx.DefaultQuery("order", "ASC"))
+	orderBy := ctx.DefaultQuery("sort_by", "id")
+	count := models.CountUser(search)
+	allUsers := models.GetAllUsers(page, limit, orderBy, order)
+
+	if order != "ASC" {
+		order = "DESC"
+	}
 
 	foundUser := models.SearchUserByEmail(search)
 	if search != "" {
@@ -98,6 +105,7 @@ func GetAllUsers(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, models.Response{
 				Succsess: true,
 				Message:  "list all users",
+				PageInfo: models.PageInfo(lib.GetPageInfo(page, limit, count)),
 				Results:  foundUser[0],
 			})
 			return
@@ -105,6 +113,7 @@ func GetAllUsers(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, models.Response{
 			Succsess: true,
 			Message:  "list all users",
+			PageInfo: models.PageInfo(lib.GetPageInfo(page, limit, count)),
 			Results:  foundUser,
 		})
 		return
@@ -112,6 +121,7 @@ func GetAllUsers(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, models.Response{
 		Succsess: true,
 		Message:  "list all users",
+		PageInfo: models.PageInfo(lib.GetPageInfo(page, limit, count)),
 		Results:  allUsers,
 	})
 }
