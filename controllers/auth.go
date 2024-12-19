@@ -51,7 +51,7 @@ func Login(ctx *gin.Context) {
 
 	// user := FindUserByEmail(form.Email)
 	user := models.FindUserByEmail(form.Email)
-	isValid := lib.HashValidator(form.Password, form.Password, user.Password)
+	isValid := lib.HashValidator(form.Password, user.Password)
 	if isValid {
 		token := lib.GenerateToken(struct {
 			UserID int `json:"userId"`

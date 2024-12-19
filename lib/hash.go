@@ -1,13 +1,24 @@
 package lib
 
-import "github.com/pilinux/argon2"
+import (
+	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/pilinux/argon2"
+)
+
+// var SECRET_KEY = "SECRET_KEY"
 
 func CreateHash(password string) string {
-	hasher, _ := argon2.CreateHash(password, string(JWT_SECRET), argon2.DefaultParams)
+	godotenv.Load()
+	var SECRET_KEY = os.Getenv("SECRET_KEY")
+	hasher, _ := argon2.CreateHash(password, string(SECRET_KEY), argon2.DefaultParams)
 	return hasher
 }
 
-func HashValidator(password string, secret string, hash string) bool {
-	isValid, _ := argon2.ComparePasswordAndHash(password, secret, hash)
+func HashValidator(password string, hash string) bool {
+	godotenv.Load()
+	var SECRET_KEY = os.Getenv("SECRET_KEY")
+	isValid, _ := argon2.ComparePasswordAndHash(password, SECRET_KEY, hash)
 	return isValid
 }

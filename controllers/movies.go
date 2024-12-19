@@ -17,11 +17,11 @@ func GetAllMovies(ctx *gin.Context) {
 	search := ctx.DefaultQuery("search", "")
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
-	sorting := strings.ToLower(ctx.DefaultQuery("order", "ASC"))
+	sorting := ctx.DefaultQuery("order", "ASC")
 	sortBy := ctx.DefaultQuery("sort_by", "id")
 
-	if sorting != "asc" {
-		sorting = "desc"
+	if sorting != "ASC" {
+		sorting = "DESC"
 	}
 
 	var movies models.ListMovies

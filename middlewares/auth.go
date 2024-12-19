@@ -1,14 +1,15 @@
 package middlewares
 
 import (
-	"example/postman/lib"
 	"example/postman/models"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
+	"github.com/joho/godotenv"
 )
 
 func ValidateToken() gin.HandlerFunc {
@@ -26,7 +27,9 @@ func ValidateToken() gin.HandlerFunc {
 		tok, _ := jwt.ParseSigned(token, []jose.SignatureAlgorithm{jose.HS256})
 		out := jwt.Claims{}
 
-		err := tok.Claims(lib.JWT_SECRET, &out)
+		godotenv.Load()
+		var SECRET_KEY = os.Getenv("SECRET_KEY")
+		err := tok.Claims(SECRET_KEY, &out)
 
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, models.Response{

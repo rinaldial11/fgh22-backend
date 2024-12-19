@@ -1,12 +1,21 @@
 package lib
 
-import "github.com/redis/go-redis/v9"
+import (
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
+)
 
 func Redis() *redis.Client {
+	godotenv.Load()
+	redisDb, _ := strconv.Atoi(os.Getenv("REDIS_DB"))
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "172.16.211.131:6379",
+		Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
 		Password: "",
-		DB:       0,
+		DB:       redisDb,
 	})
 	return rdb
 }
